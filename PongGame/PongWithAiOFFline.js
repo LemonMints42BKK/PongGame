@@ -298,7 +298,7 @@ var Game = {
 		}
 	},
 
-	menu: function () {
+	menu: async function () {
 		console.log("Choose play mode")
 		this.context.font = '1.5rem Aldrich';
         this.context.fillStyle = '#2D3748';
@@ -315,42 +315,57 @@ var Game = {
             this.canvas.height /2 - 20
         );
         this.context.fillText(
-            "'A' : AI MODE",
+            "'1' : AI MODE",
             this.canvas.width / 2,
             this.canvas.height /2 + 20
         );
 		this.context.fillText(
-            "'B' : 2 PLAYER MODE",
+            "'2' : 2 PLAYER MODE",
             this.canvas.width / 2,
             this.canvas.height /2 + 40
         );
-		Pong.WaitPlayChoose();
+		Pong.mode = await waitPlayerChoose();
 	},
 
-	WaitPlayChoose: function (key) {
-		document.addEventListener('keydown',
-			function (key) {
-
-			});
+	waitForInput: function() {
+		return new choich((resolve) => {
+			const inputHandler = (event) => {
+				if(event.key === '1' || event.key === '2')
+					document.removeEventListener('keydown', inputHandler);
+					resolve(event.key);
+			};
+			document.addEventListenerEventListener('keydown', inputHandler);
+		});
 	},
+
+	asyncOperation: function() {
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				console.log("Async operation completed");
+				resolve();
+			}, 2000); // Simulate a delay with setTimeout
+		});
+	},
+
+	
 
     listen: function () {
         document.addEventListener('keydown', 
-            function (key) {
+            function (event) {
                 if(Pong.starting === false) {
                     Pong.starting = true;
                     window.requestAnimationFrame(Pong.loop);
                 }
                 //Handle Right Player
-                if (key.code === 'w') Pong.rightPlayer.moveY = DIRECTION.UP;
-                if (key.code === 's') Pong.rightPlayer.moveY = DIRECTION.DOWN;
+                if (event.code === 'ArrowUp') Pong.rightPlayer.moveY = DIRECTION.UP;
+                if (event.code === 'ArrowDown') Pong.rightPlayer.moveY = DIRECTION.DOWN;
                 //Handle Left Player
-                if (key.keyCode === 87) Pong.leftPlayer.moveY = DIRECTION.UP;
-                if (key.keyCode === 83) Pong.leftPlayer.moveY = DIRECTION.DOWN;
+                if (event.code === 'KeyW') Pong.leftPlayer.moveY = DIRECTION.UP;
+                if (event.code === 'KeyS') Pong.leftPlayer.moveY = DIRECTION.DOWN;
 
             });
         document.addEventListener('keyup',
-            function (key) {
+            function (event) {
                 Pong.rightPlayer.moveY = DIRECTION.IDLE;
                 Pong.leftPlayer.moveY = DIRECTION.IDLE;
             });
