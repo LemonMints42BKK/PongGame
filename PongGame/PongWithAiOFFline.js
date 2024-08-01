@@ -10,9 +10,10 @@ var DIRECTION = {
 var MODE = {
 	AI:	1,
 	TWIN: 2,
+	DELAY: 300
 };
 
-var rounds = [3, 3, 3];
+var rounds = [11, 11, 11];
 var Player = {
     new: function(side) {
         return {
@@ -23,7 +24,7 @@ var Player = {
             moveY:DIRECTION.IDLE,
             score: 0,
 			winRound:0,
-            speed: this.canvas.width * 0.02   
+            speed: this.canvas.width * 0.01  
         };
     }
 };
@@ -38,7 +39,7 @@ var Ai = {
             moveY:DIRECTION.IDLE,
             score: 0,
 			winRound:0,
-            speed: this.canvas.width * 0.02   
+            speed: this.canvas.width * 0.01   
         };
     }
 };
@@ -57,41 +58,63 @@ var Ball = {
 };
 
 var Game = {
-    initialize: function () {
+    initialize: async function () {
 		console.log(this.name + " is being initialized.");
         this.canvas = document.querySelector('canvas');
         this.context = this.canvas.getContext('2d');
 
+		// this.setCanvasDimension();
 		this.canvas.tableHeight = 90;
-		this.canvas.tableWidth = this.canvas.tableHeight * 0.75;
+		this.canvas.tableWidth = this.canvas.tableHeight * 0.80;
         this.canvas.height = (this.canvas.tableWidth * window.innerWidth) / 100;
 		this.canvas.width = (this.canvas.tableHeight * window.innerHeight) / 100;
-        this.canvas.style.width = this.canvas.tableWidth + 'vw';
-        this.canvas.style.height = this.canvas.tableHeight + 'vh';
-		
+        this.canvas.style.width = this.canvas.Width + 'vw';
+        this.canvas.style.height = this.canvas.Height + 'vh';
+		console.log("Canvas Height: " + this.canvas.height);
+		console.log("Canvas Width: " + this.canvas.width);
+
 		this.mode = MODE.AI;
-		Pong.menu();
+		await Pong.menu();
 		if (this.mode === MODE.AI) {
 			console.log("AI Model initialize")
 			this.rightPlayer = Player.new.call(this, 'right');
 			this.leftPlayer = Ai.new.call(this, 'left');
-			this.ball = Ball.new.call(this, this.canvas.width * 0.008);
+			this.ball = Ball.new.call(this, this.canvas.width * 0.006);
 			this.turn = this.rightPlayer;
 		} else {
 			console.log("2-Player initialize")
 			this.rightPlayer = Player.new.call(this, 'right');
 			this.leftPlayer = Player.new.call(this, 'left');
-			this.ball = Ball.new.call(this, this.canvas.width * 0.008);
+			this.ball = Ball.new.call(this, this.canvas.width * 0.006);
 			this.turn = this.rightPlayer;
 		}
-
+		this.startTime = null;
 		this.starting = false;
         this.over = false;
         this.timmer = 0;
         this.round = 0;
+		this.unknow = this.canvas.height / 2;
 		//Start New Game
 		Pong.start();
     },
+
+	// setCanvasDimension: function(){
+	// 	// Desired aspect ratio 2:3
+	// 	const aspectRation = 2/3;
+	// 	let windowScreenWidth = window.innerWidth * 0.9;
+	// 	let windowScreenHeight = window.innerHeight * 0.9;
+	// 	// Calculate the width and height to maintain the aspect ratio
+	// 	if(windowScreenWidth / windowScreenHeight < aspectRation){
+	// 		this.canvas.width = windowScreenHeight;
+	// 		this.canvas.height = windowScreenWidth * aspectRation;
+	// 	} else {
+	// 		this.canvas.height = windowScreenHeight * aspectRation;
+	// 		this.canvas.width = windowScreenWidth ;
+	// 	}
+	// 	 // Update the canvas properties 
+	// 	this.canvas.Width = this.canvas.tablewidth;
+	// 	this.canvas.Height = this.canvas.tableheight;
+	// },
 
 	draw: function () {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -191,7 +214,7 @@ var Game = {
 
 	// Wait for a delay to have passed after each turn.
 	_turnDelayIsOver: function() {
-		return ((new Date()).getTime() - this.timmer >= 1000);
+		return ((new Date()).getTime() - this.timmer >= 2000);
 	},
 
     _resetTurn: function(victory, loser){
@@ -202,7 +225,7 @@ var Game = {
 		victory.score++;
 	},
 
-	update: function (){
+	update: function (timestamp){
 		if (!this.over) {
 			if (this.ball.x <= 0){
                 console.log('Right-Player get point!')
@@ -270,6 +293,25 @@ var Game = {
 					this.ball.moveX = DIRECTION.LEFT;
 				}
 			}
+			//AI Player
+			if(this.mode === MODE.AI){
+				//time delay sense of ball
+				this.elapsed = timestamp - this.startTime;
+				if (this.elapsed >= MODE.DELAY){
+					this.unknow = this.ball.y;
+					this.startTime = timestamp;
+				}
+				//condition of sense distance
+				if(this.ball.x < this.canvas.width * 0.35){
+					if(this.ball.moveX === DIRECTION.LEFT){
+						if(this.leftPlayer.y + (this.leftPlayer.height / 2) < this.unknow){
+							this.leftPlayer.y += this.leftPlayer.speed;
+						}else{
+							this.leftPlayer.y -= this.leftPlayer.speed;
+						}
+					}
+				}
+			}
 		}
 		//Handle round
 		//Check Winner of the round
@@ -300,54 +342,75 @@ var Game = {
 
 	menu: async function () {
 		console.log("Choose play mode")
-		this.context.font = '1.5rem Aldrich';
+
+		if (!this.context){ 
+			console.log("Context is not available");	
+			return;
+		}
         this.context.fillStyle = '#2D3748';
         this.context.fillRect(
-            (this.canvas.width / 2) - (this.canvas.width * 0.25),
-            this.canvas.height / 2 - (this.canvas.height * 0.1),
-            (this.canvas.width * 0.25) * 2,
-            (this.canvas.height * 0.1) * 2
+            0,
+            0,
+            this.canvas.width,
+            this.canvas.height
         );
+		this.context.font = '2rem Aldrich';
+		this.context.textAlign = 'center';
+		this.context.textBaseline = 'middle';
         this.context.fillStyle = '#F9B10B';
         this.context.fillText(
-            "Choose Play Mode",
-            this.canvas.width / 2,
-            this.canvas.height /2 - 20
+			"CHOOSE PLAY MODE",
+            this.canvas.width /2,
+            (this.canvas.height /2) - 100
         );
+		this.context.font = '1.5rem Aldrich';
         this.context.fillText(
-            "'1' : AI MODE",
-            this.canvas.width / 2,
-            this.canvas.height /2 + 20
+            "Press [1] AI MODE",
+            this.canvas.width /2,
+            (this.canvas.height /2) - 50
         );
 		this.context.fillText(
-            "'2' : 2 PLAYER MODE",
-            this.canvas.width / 2,
-            this.canvas.height /2 + 40
+            "Press [2] TWO PLAYER MODE",
+            this.canvas.width /2,
+            (this.canvas.height /2) 
         );
-		Pong.mode = await waitPlayerChoose();
+		this.mode = await this.chooseMode();
+		console.log("Player choose: " + Pong.mode);
+	},
+
+	chooseMode: async function() {
+		let playmode;
+		do{
+			console.log("Press '1' for AI Mode or '2' for 2-Player Mode.");
+			playmode = await this.waitForInput();
+			if (playmode === '1') {
+				return MODE.AI;
+			} else if (playmode === '2') {
+				return MODE.TWIN;
+			} else {
+				console.log("Invalid input. Please press '1' or '2'.");
+			}
+		} while(playmode !== '1' && playmode !== '2');
 	},
 
 	waitForInput: function() {
-		return new choich((resolve) => {
+		return new Promise((resolve) => {
 			const inputHandler = (event) => {
-				if(event.key === '1' || event.key === '2')
+				// console.log(`Key pressed: ${event.key}`);
+				if (event.key === '1') {
 					document.removeEventListener('keydown', inputHandler);
 					resolve(event.key);
+					return(event.key);
+				} else if (event.key === '2') {
+						document.removeEventListener('keydown', inputHandler);
+						resolve(event.key);
+						return(event.key);
+				}
+				return '0';
 			};
-			document.addEventListenerEventListener('keydown', inputHandler);
+			document.addEventListener('keydown', inputHandler);
 		});
 	},
-
-	asyncOperation: function() {
-		return new Promise((resolve) => {
-			setTimeout(() => {
-				console.log("Async operation completed");
-				resolve();
-			}, 2000); // Simulate a delay with setTimeout
-		});
-	},
-
-	
 
     listen: function () {
         document.addEventListener('keydown', 
@@ -360,9 +423,10 @@ var Game = {
                 if (event.code === 'ArrowUp') Pong.rightPlayer.moveY = DIRECTION.UP;
                 if (event.code === 'ArrowDown') Pong.rightPlayer.moveY = DIRECTION.DOWN;
                 //Handle Left Player
-                if (event.code === 'KeyW') Pong.leftPlayer.moveY = DIRECTION.UP;
-                if (event.code === 'KeyS') Pong.leftPlayer.moveY = DIRECTION.DOWN;
-
+				if (Pong.mode === MODE.TWIN) {
+					if (event.code === 'KeyW') Pong.leftPlayer.moveY = DIRECTION.UP;
+                	if (event.code === 'KeyS') Pong.leftPlayer.moveY = DIRECTION.DOWN;
+				}
             });
         document.addEventListener('keyup',
             function (event) {
@@ -371,9 +435,8 @@ var Game = {
             });
     },
 
-    loop: function () {
-        
-        Pong.update();
+    loop: function (timestamp) {
+        Pong.update(timestamp);
         Pong.draw();
         if(!Pong.over) requestAnimationFrame(Pong.loop);
     },

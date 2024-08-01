@@ -1,0 +1,72 @@
+listen: function () {
+    const canvas = document.getElementById('pongCanvas'); // Assume your canvas has this ID
+
+    // Handle keyboard events
+    document.addEventListener('keydown', 
+        function (event) {
+            if (Pong.starting === false) {
+                Pong.starting = true;
+                window.requestAnimationFrame(Pong.loop);
+            }
+            // Handle Right Player
+            if (event.code === 'KeyW') Pong.rightPlayer.moveY = DIRECTION.UP;
+            if (event.code === 'KeyS') Pong.rightPlayer.moveY = DIRECTION.DOWN;
+            // Handle Left Player
+            if (event.code === 'ArrowUp') Pong.leftPlayer.moveY = DIRECTION.UP;
+            if (event.code === 'ArrowDown') Pong.leftPlayer.moveY = DIRECTION.DOWN;
+        }
+    );
+
+    document.addEventListener('keyup',
+        function (event) {
+            // Handle Right Player
+            if (event.code === 'KeyW' || event.code === 'KeyS') Pong.rightPlayer.moveY = DIRECTION.IDLE;
+            // Handle Left Player
+            if (event.code === 'ArrowUp' || event.code === 'ArrowDown') Pong.leftPlayer.moveY = DIRECTION.IDLE;
+        }
+    );
+
+    // Handle touch events on the canvas
+    canvas.addEventListener('touchstart', function (event) {
+        Pong.starting = true;
+        window.requestAnimationFrame(Pong.loop);
+        handleTouch(event);
+    });
+
+    canvas.addEventListener('touchmove', function (event) {
+        event.preventDefault(); // Prevent scrolling
+        handleTouch(event);
+    });
+
+    canvas.addEventListener('touchend', function (event) {
+        Pong.rightPlayer.moveY = DIRECTION.IDLE;
+        Pong.leftPlayer.moveY = DIRECTION.IDLE;
+    });
+
+    function handleTouch(event) {
+        const touch = event.touches[0];
+        const touchX = touch.clientX;
+        const touchY = touch.clientY;
+        const canvasRect = canvas.getBoundingClientRect();
+        const canvasMidX = canvasRect.left + canvasRect.width / 2;
+        const screenHeight = window.innerHeight;
+
+        // Right Player
+        if (touchX > canvasMidX) {
+            if (touchY < screenHeight / 2) {
+                Pong.rightPlayer.moveY = DIRECTION.UP;
+            } else {
+                Pong.rightPlayer.moveY = DIRECTION.DOWN;
+            }
+        }
+
+        // Left Player
+        if (touchX <= canvasMidX) {
+            if (touchY < screenHeight / 2) {
+                Pong.leftPlayer.moveY = DIRECTION.UP;
+            } else {
+                Pong.leftPlayer.moveY = DIRECTION.DOWN;
+            }
+        }
+    }
+},

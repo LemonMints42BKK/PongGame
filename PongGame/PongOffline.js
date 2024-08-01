@@ -48,6 +48,8 @@ var Game = {
 		this.canvas.width = (this.canvas.tableHeight * window.innerHeight) / 100;
         this.canvas.style.width = this.canvas.tableWidth + 'vw';
         this.canvas.style.height = this.canvas.tableHeight + 'vh';
+		console.log("Canvas width: " + this.canvas.width);
+		console.log("Canvas height: " + this.canvas.height);
 
 		this.rightPlayer = Player.new.call(this, 'right');
         this.leftPlayer = Player.new.call(this, 'left');
@@ -291,6 +293,51 @@ var Game = {
                 Pong.rightPlayer.moveY = DIRECTION.IDLE;
                 Pong.leftPlayer.moveY = DIRECTION.IDLE;
             });
+	
+    // // Handle touch events
+
+    // this.canvas.addEventListener('touchstart', function (event) {
+    //     Pong.starting = true;
+    //     window.requestAnimationFrame(Pong.loop);
+    //     handleTouch(event);
+    // });
+
+    // this.canvas.addEventListener('touchmove', function (event) {
+    //     window.preventDefault(); // Prevent scrolling
+    //     handleTouch(event);       
+    // });
+
+    // this.canvas.addEventListener('touchend', function (event) {
+    //     Pong.rightPlayer.moveY = DIRECTION.IDLE;
+	// 	Pong.leftPlayer.moveY = DIRECTION.IDLE;
+    // });
+
+	// function handleTouch(event) {
+    //     const touch = event.touches[0];
+    //     const touchX = touch.clientX;
+    //     const touchY = touch.clientY;
+    //     const canvasRect = canvas.getBoundingClientRect();
+    //     const canvasMidX = canvasRect.left + canvasRect.width / 2;
+    //     const screenHeight = window.innerHeight;
+
+    //     // Right Player
+    //     if (touchX > canvasMidX) {
+    //         if (touchY < screenHeight / 2) {
+    //             Pong.rightPlayer.moveY = DIRECTION.UP;
+    //         } else {
+    //             Pong.rightPlayer.moveY = DIRECTION.DOWN;
+    //         }
+    //     }
+
+    //     // Left Player
+    //     if (touchX <= canvasMidX) {
+    //         if (touchY < screenHeight / 2) {
+    //             Pong.leftPlayer.moveY = DIRECTION.UP;
+    //         } else {
+    //             Pong.leftPlayer.moveY = DIRECTION.DOWN;
+    //         }
+    //     }
+    // }
     },
 
     loop: function () {
